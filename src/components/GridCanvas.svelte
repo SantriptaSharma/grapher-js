@@ -1,12 +1,13 @@
 <script lang="ts">
     import { onMount } from "svelte";
     import { spring, tweened, type Spring, type Tweened } from "svelte/motion";
-    import { cubicInOut } from "svelte/easing"
+
     import { GridView } from "../library/gridview";
     import { DrawAxisLine, ClearCanvas } from "../library/drawing";
     import { Color } from "../library/color";
     import { ClampValue } from "../library/helpers";
     import { Point } from "../library/point";
+
     import { viewport } from "../stores/viewport";
     import { type MouseState, mouseState } from "../stores/mouse";
 
@@ -18,7 +19,7 @@
     let zoomMovement : Tweened<Point>;
     let currentSpringTargetScale : number;
 
-    let localMouseState : MouseState = {leftPressed: false, rightPressed: false, middlePressed: false, mousePos: {x: 0, y: 0}};
+    let localMouseState : MouseState = {leftPressed: false, wasLeftPressed: false, rightPressed: false, wasRightPressed: false,  middlePressed: false, wasMiddlePressed: false, mousePos: {x: 0, y: 0}, lastMousePos: {x: 0, y: 0}};
     let lineColor : Color = new Color("#4e4e4e8c");
     let sublineColor : Color = new Color("#4e4e4e66");
 
@@ -99,14 +100,17 @@
     {
         if(event.button === 0)
         {
+            localMouseState.wasLeftPressed = localMouseState.leftPressed;
             localMouseState.leftPressed = true;
         }
         else if(event.button === 2)
         {
+            localMouseState.wasRightPressed = localMouseState.rightPressed;
             localMouseState.rightPressed = true;
         }
         else
         {
+            localMouseState.wasMiddlePressed = localMouseState.middlePressed;
             localMouseState.middlePressed = true;
         }
 
@@ -119,14 +123,17 @@
     {
         if(event.button === 0)
         {
+            localMouseState.wasLeftPressed = localMouseState.leftPressed;
             localMouseState.leftPressed = false;
         }
         else if(event.button === 2)
         {
+            localMouseState.wasRightPressed = localMouseState.rightPressed;
             localMouseState.rightPressed = false;
         }
         else
         {
+            localMouseState.wasMiddlePressed = localMouseState.middlePressed;
             localMouseState.middlePressed = false;
         }
 
@@ -153,6 +160,7 @@
             viewport.set(localViewport)
         }
 
+        localMouseState.lastMousePos = localMouseState.mousePos;
         localMouseState.mousePos = newPosition;
 
         mouseState.set(localMouseState);
@@ -183,7 +191,7 @@
         let mouseInUnits = localViewport.PixelToUnit(localMouseState.mousePos);
         let distanceFromCenter = Point.Distance(centerPos, mouseInUnits);
         let targetDirection = Point.Scale(Point.Subtract(mouseInUnits, centerPos), 1/distanceFromCenter);
-        let distanceToMove = Math.min(distanceFromCenter, localViewport.scale * 200) * event.deltaY > 0 ? -1 : 1;
+        let distanceToMove = Math.min(distanceFromCenter, localViewport.scale * 100) * event.deltaY > 0 ? -0.3 : 0.5;
 
         targetPos = Point.Add(targetPos, Point.Scale(targetDirection, distanceToMove));
 
@@ -231,13 +239,16 @@
     });
 </script>
 
-<canvas id = "grid-canvas" bind:this = {canvasElement} on:wheel|preventDefault = {OnWheelEvent}
+<canvas bind:this = {canvasElement} on:wheel|preventDefault = {OnWheelEvent}
 on:mousedown|preventDefault = {OnMouseDown} on:mouseup|preventDefault = {OnMouseUp} on:mousemove|preventDefault = {OnMouseMove} 
 on:contextmenu|preventDefault|stopPropagation />
 
 <style>
-    #grid-canvas
+    canvas
     {
-        z-index: 100;
+        position: absolute;
+        left: 0;
+        top: 0;
+        z-index: 0;
     }   
 </style>

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import DisplayCanvas from "./components/DisplayCanvas.svelte";
 	import GridCanvas from "./components/GridCanvas.svelte";
 
 	let isSidebarOpen = false;
@@ -13,6 +14,7 @@
 </aside>
 <main>
 	<GridCanvas bind:this = {gridCanvas} />
+	<DisplayCanvas />
 </main>
 
 <style>
@@ -33,6 +35,7 @@
 	{
 		width: 20vw;
 		height: 60vh;
+		z-index: 50;
 
 		border-radius: 0 20px 20px 0;
 		background-color: #e4e4e49c;

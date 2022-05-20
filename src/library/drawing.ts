@@ -1,4 +1,6 @@
+import { claim_text } from "svelte/internal";
 import { Color } from "./color"
+import type { Point } from "./point";
 
 export function ClearCanvas(ctx : CanvasRenderingContext2D, color? : Color) : void
 {
@@ -46,4 +48,20 @@ export function DrawAxisLine({ctx, width = 5.0, x, y, color} : AxisLineParams) :
         ctx.stroke();
         ctx.closePath();
     }
+}
+
+type CircleParams = {
+    ctx : CanvasRenderingContext2D,
+    radius: number,
+    pos : Point,
+    col? : Color
+}
+
+export function DrawCircle({ctx, radius, pos, col = Color.RandomColor()} : CircleParams)
+{
+    ctx.fillStyle = col.ToString();
+    ctx.beginPath();
+    ctx.arc(pos.x, pos.y, radius, 0, 2 * Math.PI);
+    ctx.fill();
+    ctx.closePath();
 }

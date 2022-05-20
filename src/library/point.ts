@@ -14,6 +14,9 @@ export class Point
         this.y = y;
     }
 
+
+    static Zero : Point = {x: 0, y: 0};
+
     static Add(a : Point, b : Point) : Point
     {
         return new Point({x: a.x + b.x, y: a.y + b.y});

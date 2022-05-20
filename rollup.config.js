@@ -46,25 +46,17 @@ export default {
 				dev: !production
 			}
 		}),
-		// we'll extract any component CSS out into
-		// a separate file - better for performance
 		css({ output: 'bundle.css' }),
-
-		// If you have external dependencies installed from
-		// npm, you'll most likely need these plugins. In
-		// some cases you'll need additional configuration -
-		// consult the documentation for details:
-		// https://github.com/rollup/plugins/tree/master/packages/commonjs
 		resolve({
 			browser: true,
 			dedupe: ['svelte']
 		}),
-		commonjs(),
 		typescript({
 			sourceMap: !production,
 			inlineSources: !production,
 			rootDir: "./src/"
 		}),
+		commonjs(),
 
 		// In dev mode, call `npm run start` once
 		// the bundle has been generated

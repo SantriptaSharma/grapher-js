@@ -5,6 +5,15 @@ export class Color
     b : number;
     a : number;
 
+    static RandomColor() : Color
+    {
+        let r = Math.floor(Math.random() * 256);
+        let g = Math.floor(Math.random() * 256);
+        let b = Math.floor(Math.random() * 256);
+
+        return new Color(`${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`);
+    }
+    
     constructor(hex : string)
     {
         if(hex.startsWith("#"))
