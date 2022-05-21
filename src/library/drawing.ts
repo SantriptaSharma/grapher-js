@@ -1,3 +1,4 @@
+import { claim_text } from "svelte/internal";
 import { Color } from "./color"
 import type { BBox, GridView } from "./gridview";
 import type { Point } from "./point";
@@ -66,6 +67,15 @@ export function DrawCircle({ctx, radius, pos, col = Color.RandomColor()} : Circl
     ctx.closePath();
 }
 
+export function DrawText(ctx : CanvasRenderingContext2D, pos : Point, text : string, color : Color, height : number)
+{
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.font = `${height}px Segoe UI`
+    ctx.fillStyle = color.ToString();
+    ctx.fillText(text, pos.x, pos.y);
+}
+
 export function DebugDrawBBox(ctx : CanvasRenderingContext2D, bbox : BBox, viewport : GridView)
 {
     let pos = viewport.UnitToPixel(bbox.p);
@@ -73,4 +83,24 @@ export function DebugDrawBBox(ctx : CanvasRenderingContext2D, bbox : BBox, viewp
     ctx.lineWidth = 8;
     ctx.strokeStyle = "#ff000044";
     ctx.strokeRect(pos.x, pos.y, bbox.w / viewport.scale, bbox.h / viewport.scale);
+}
+
+type LineParams =
+{
+    ctx : CanvasRenderingContext2D,
+    p1 : Point,
+    p2 : Point,
+    width? : number,
+    color? : Color
+}
+
+export function DrawLine({ctx, p1, p2, width = 8, color = Color.FromRGBA(0.2, 0.2, 0.2, 1)} : LineParams)
+{
+    ctx.beginPath();
+    ctx.moveTo(p1.x, p1.y);
+    ctx.lineWidth = width;
+    ctx.strokeStyle = color.ToString();
+    ctx.lineTo(p2.x, p2.y);
+    ctx.stroke();
+    ctx.closePath();
 }
