@@ -69,7 +69,7 @@ type BoxObject = {
 /** An Axis-Aligned Bounding Box */
 export class BBox
 {
-    p : Point = {x: 0, y: 0};
+    p : Point = Point.Zero;
     w : number = 0.0;
     h : number = 0.0;
 
@@ -78,21 +78,13 @@ export class BBox
         Object.assign(this, initList);
     }
 
-    Intersects(other : BBox) : boolean
+    Inside(p : Point) : boolean
     {
-        const offset = Point.Subtract(other.p, this.p);
-
-        const dx = offset.x;
-        const overlapDepthX = (this.w/2 + other.w/2) - Math.abs(dx);
-
-        const dy = offset.y;
-        const overlapDepthY = (this.h/2 + other.h/2) - Math.abs(dy);
-        
-        return overlapDepthX > 0 && overlapDepthY > 0;
+        return (p.x >= this.p.x && p.x <= this.p.x + this.w) && (p.y >= this.p.y && p.y <= this.p.y + this.h);
     }
 
-    IntersectsView(view : GridView) : boolean
+    Intersects(other : BBox) : boolean
     {
-        return this.Intersects(view.ToBox());
+        return other.Inside(this.p) || other.Inside(Point.Add(this.p, {x: this.w, y: 0})) || other.Inside(Point.Add(this.p, {x: this.w, y: this.h})) || other.Inside(Point.Add(this.p, {x: 0, y: this.h})) || other.Inside(Point.Add(this.p, {x: this.w/2, y: this.h/2})) || this.Inside(other.p) || this.Inside(Point.Add(other.p, {x: other.w, y: 0})) || this.Inside(Point.Add(other.p, {x: other.w, y: other.h})) || this.Inside(Point.Add(other.p, {x: 0, y: other.h})) || this.Inside(Point.Add(other.p, {x: other.w/2, y: other.h/2})); 
     }
 }

@@ -1,5 +1,5 @@
-import { claim_text } from "svelte/internal";
 import { Color } from "./color"
+import type { BBox, GridView } from "./gridview";
 import type { Point } from "./point";
 
 export function ClearCanvas(ctx : CanvasRenderingContext2D, color? : Color) : void
@@ -64,4 +64,13 @@ export function DrawCircle({ctx, radius, pos, col = Color.RandomColor()} : Circl
     ctx.arc(pos.x, pos.y, radius, 0, 2 * Math.PI);
     ctx.fill();
     ctx.closePath();
+}
+
+export function DebugDrawBBox(ctx : CanvasRenderingContext2D, bbox : BBox, viewport : GridView)
+{
+    let pos = viewport.UnitToPixel(bbox.p);
+    ctx.beginPath();
+    ctx.lineWidth = 8;
+    ctx.strokeStyle = "#ff000044";
+    ctx.strokeRect(pos.x, pos.y, bbox.w / viewport.scale, bbox.h / viewport.scale);
 }

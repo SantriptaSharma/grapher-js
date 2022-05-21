@@ -155,6 +155,7 @@
         {
             localViewport.Translate(Point.Scale(delta, -1));
             
+            zoomMovement.set(Point.Add(localViewport.pos, {x: localViewport.w/2, y: localViewport.h/2}), {duration: 0});
             DrawGrid();
             
             viewport.set(localViewport)
@@ -211,7 +212,7 @@
         
         springyZoom = spring(localViewport.scale, {stiffness: 0.4, damping: 0.8, precision: 0.000005});
         currentSpringTargetScale = localViewport.scale;
-        zoomMovement = tweened(localViewport.pos, { duration: 50});
+        zoomMovement = tweened(Point.Add(localViewport.pos, {x: localViewport.w/2, y: localViewport.h/2}), { duration: 50});
 
         window.addEventListener("resize", () => {
             UpdateCanvasSize();

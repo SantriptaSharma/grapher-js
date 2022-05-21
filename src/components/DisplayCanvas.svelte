@@ -4,7 +4,7 @@
     import { Point } from "../library/point";
     import type { BBox, GridView } from "../library/gridview";
     import { Color } from "../library/color";
-    import { ClearCanvas, DrawCircle } from "../library/drawing";
+    import { ClearCanvas, DebugDrawBBox, DrawCircle } from "../library/drawing";
     import { GraphVertex, type GraphEdge } from "../library/graphelement";
 
     import { viewport } from "../stores/viewport";
@@ -13,7 +13,7 @@
     let canvasElement : HTMLCanvasElement;
     let canvasContext : CanvasRenderingContext2D; 
 
-    let graphVertices : GraphVertex[] = [new GraphVertex({id: 0, pos: Point.Zero, radius: 1, color: new Color("8cc63f88")})];
+    let graphVertices : GraphVertex[] = [new GraphVertex({id: 0, pos: {x: -1, y: 3}, radius: 1, color: new Color("8cc63f88")}), new GraphVertex({id: 0, pos: {x: 3, y: -2}, radius: 0.3, color: new Color("880088")})];
     let graphEdges : GraphEdge[] = [];
 
     function DrawCanvas()
@@ -21,15 +21,15 @@
         ClearCanvas(canvasContext);
         
         let viewBox : BBox = $viewport.ToBox();
+        DebugDrawBBox(canvasContext, viewBox, $viewport);
 
         graphVertices.forEach((val) => {
-            // TODO: Intersection not quite working
-            if(val.box.Intersects(viewBox) || true)
+            if(val.box.Intersects(viewBox))
             {
-                console.log("drawing");
                 let screenPos = $viewport.UnitToPixel(val.pos);
                 let screenRadius = val.radius / $viewport.scale;
                 DrawCircle({ctx: canvasContext, radius: screenRadius, pos: screenPos, col: val.color});
+                DebugDrawBBox(canvasContext, val.box, $viewport);
             }
         });
     }
