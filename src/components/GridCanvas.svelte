@@ -192,7 +192,7 @@
         let mouseInUnits = localViewport.PixelToUnit(localMouseState.mousePos);
         let distanceFromCenter = Point.Distance(centerPos, mouseInUnits);
         let targetDirection = Point.Scale(Point.Subtract(mouseInUnits, centerPos), 1/distanceFromCenter);
-        let distanceToMove = Math.min(distanceFromCenter, localViewport.scale * 100) * event.deltaY > 0 ? -0.3 : 0.5;
+        let distanceToMove = distanceFromCenter * event.deltaY > 0 ? -0.5 : 0.8;
 
         targetPos = Point.Add(targetPos, Point.Scale(targetDirection, distanceToMove));
 
