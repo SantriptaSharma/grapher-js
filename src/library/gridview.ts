@@ -87,4 +87,9 @@ export class BBox
     {
         return other.Inside(this.p) || other.Inside(Point.Add(this.p, {x: this.w, y: 0})) || other.Inside(Point.Add(this.p, {x: this.w, y: this.h})) || other.Inside(Point.Add(this.p, {x: 0, y: this.h})) || other.Inside(Point.Add(this.p, {x: this.w/2, y: this.h/2})) || this.Inside(other.p) || this.Inside(Point.Add(other.p, {x: other.w, y: 0})) || this.Inside(Point.Add(other.p, {x: other.w, y: other.h})) || this.Inside(Point.Add(other.p, {x: 0, y: other.h})) || this.Inside(Point.Add(other.p, {x: other.w/2, y: other.h/2})); 
     }
+
+    Expanded(delta : number) : BBox
+    {
+        return new BBox({p: Point.Subtract(this.p, {x: delta/4, y: delta/4}), w: this.w + delta/2, h: this.h + delta/2});
+    }
 }

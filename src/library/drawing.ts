@@ -3,6 +3,8 @@ import { Color } from "./color"
 import type { BBox, GridView } from "./gridview";
 import type { Point } from "./point";
 
+// This would probably be better as a class that takes shared ownership of the ctx and the viewport, but oh well
+
 export function ClearCanvas(ctx : CanvasRenderingContext2D, color? : Color) : void
 {
     if(color === undefined)

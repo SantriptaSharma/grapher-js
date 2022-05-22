@@ -151,7 +151,7 @@
         let delta = Point.Subtract(newPosition, oldPosition);
         delta = Point.Scale(delta, localViewport.scale);
 
-        if(localMouseState.middlePressed)
+        if(localMouseState.middlePressed && !localMouseState.leftPressed)
         {
             localViewport.Translate(Point.Scale(delta, -1));
             
@@ -169,7 +169,7 @@
 
     export function OnWheelEvent(event : WheelEvent)
     {
-        if(localMouseState.middlePressed) return;    
+        if(localMouseState.middlePressed || localMouseState.leftPressed) return;    
 
         let targetVal : number;
         

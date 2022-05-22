@@ -25,7 +25,7 @@ export class GraphVertex
         this.radius = radius;
         this.color = color;
 
-        this.box = new BBox({p: Point.Subtract(pos, {x: radius, y: radius}), w: 2 * radius, h: 2 * radius});
+        this.box = new BBox({p: Point.Subtract(pos, {x: radius, y: radius}), w: 2 * radius, h: 2 * radius}).Expanded(0.3);
     }
 }
 
