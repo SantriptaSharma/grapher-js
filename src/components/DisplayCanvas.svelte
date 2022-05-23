@@ -18,6 +18,21 @@
 
     let drawBuffer : Point[] = [];
 
+    function IdToName(id : number) : string
+    {
+        id = id + 1;
+        let name = []
+        while(id > 0)
+        {
+            let char = String.fromCharCode(65 + ((id-1) % 26));
+            name.push(char);
+            id = Math.floor((id - 1) / 26);
+        }
+                
+        let text = name.reverse().join("");
+        return text;
+    }
+
     function DrawCanvas()
     {
         ClearCanvas(canvasContext);
@@ -39,19 +54,10 @@
                 let screenPos = $viewport.UnitToPixel(vert.pos);
                 let screenRadius = vert.radius / $viewport.scale;
                 
-                let id = vert.id + 1;
-                let name = []
-                while(id > 0)
-                {
-                    let char = String.fromCharCode(65 + ((id-1) % 26));
-                    name.push(char);
-                    id = Math.floor((id - 1) / 26);
-                }
-                
-                let text = name.reverse().join("");
+                let text = IdToName(vert.id);
                 let textColor = Color.FromRGBA(1 - vert.color.r, 1 - vert.color.g, 1 - vert.color.b, 1.0);
                 DrawCircle({ctx: canvasContext, radius: screenRadius, pos: screenPos, col: vert.color});
-                DrawText(canvasContext, {x: screenPos.x, y: screenPos.y}, text, textColor, screenRadius / 1.5);
+                DrawText(canvasContext, {x: screenPos.x, y: screenPos.y}, text, textColor, screenRadius*1.1);
             }
         });
     }
@@ -126,7 +132,7 @@
 
         let radius = circumference / (2 * Math.PI)
 
-        if(radius < 0.2)
+        if(radius < 0.12)
         {
             drawBuffer = [];
             DrawCanvas();
@@ -159,6 +165,38 @@
                 ms.wasLeftPressed = false;
                 mouseState.set(ms);
                 DoneDrawing();
+            }
+
+            if(!val.wasRightPressed && val.rightPressed)
+            {
+                val.wasRightPressed = true;
+                let screenPos = $viewport.PixelToUnit(val.mousePos);
+                let removedIndex = -1, removedId = -1;
+
+                graphVertices.some((val, index) => {
+                    if(val.box.Inside(screenPos))
+                    {
+                        removedIndex = index;
+                        removedId = val.id;
+                        graphVertices.splice(removedIndex, 1);
+                        return true;
+                    }
+                });
+
+                console.log(removedId);
+
+                graphEdges = graphEdges.filter((val) => {
+                    return val.a.id !== removedId && val.b.id !== removedId;
+                });
+
+                if(removedIndex === -1) return;
+
+                for(let i = removedIndex; i < graphVertices.length; i++)
+                {
+                    graphVertices[i].id = i;
+                }
+
+                DrawCanvas();
             }
         });
 
