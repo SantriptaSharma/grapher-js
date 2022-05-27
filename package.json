@@ -25,7 +25,8 @@
     "typescript": "^4.0.0"
   },
   "dependencies": {
-    "sirv-cli": "^2.0.0"
+    "sirv-cli": "^2.0.0",
+    "svelte-icons": "^2.1.0"
   },
   "description": "Tool for Graphical Analysis",
   "main": "./src/App.svelte",

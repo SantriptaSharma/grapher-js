@@ -10,6 +10,8 @@
     import { viewport } from "../stores/viewport";
     import { mouseState, type MouseState } from "../stores/mouse";
 
+    export let selectedVert : GraphVertex = null;
+
     let canvasElement : HTMLCanvasElement;
     let canvasContext : CanvasRenderingContext2D; 
 
@@ -18,7 +20,7 @@
 
     let drawBuffer : Point[] = [];
 
-    function IdToName(id : number) : string
+    export function IdToName(id : number) : string
     {
         id = id + 1;
         let name = []
@@ -28,7 +30,7 @@
             name.push(char);
             id = Math.floor((id - 1) / 26);
         }
-                
+
         let text = name.reverse().join("");
         return text;
     }
@@ -58,6 +60,9 @@
                 let textColor = Color.FromRGBA(1 - vert.color.r, 1 - vert.color.g, 1 - vert.color.b, 1.0);
                 DrawCircle({ctx: canvasContext, radius: screenRadius, pos: screenPos, col: vert.color});
                 DrawText(canvasContext, {x: screenPos.x, y: screenPos.y}, text, textColor, screenRadius*1.1);
+
+                if(vert === selectedVert)
+                    DebugDrawBBox(canvasContext, vert.box, $viewport);
             }
         });
     }
@@ -150,6 +155,37 @@
         DrawCanvas();
     }
 
+    export function DeleteSelected()
+    {
+        if(selectedVert === null) return;
+
+        let removedId = selectedVert.id;
+
+        graphVertices.splice(removedId, 1);
+
+        graphEdges = graphEdges.filter((val) => {
+            return val.a.id !== removedId && val.b.id !== removedId;
+        });
+
+        for(let i = removedId; i < graphVertices.length; i++)
+        {
+            graphVertices[i].id = i;
+        }
+
+        selectedVert = null;
+
+        DrawCanvas();
+    }
+
+    export function ColorSelected(col : Color)
+    {
+        if(selectedVert === null) return;
+
+        selectedVert.color = col;
+
+        DrawCanvas();
+    }
+
     onMount(() => {
         canvasContext = canvasElement.getContext("2d");
 
@@ -171,30 +207,19 @@
             {
                 val.wasRightPressed = true;
                 let screenPos = $viewport.PixelToUnit(val.mousePos);
-                let removedIndex = -1, removedId = -1;
 
-                graphVertices.some((val, index) => {
-                    if(val.box.Inside(screenPos))
+                let hit : boolean = false;
+
+                graphVertices.some((val) => {
+                    if(val.box.Inside(screenPos) && val !== selectedVert)
                     {
-                        removedIndex = index;
-                        removedId = val.id;
-                        graphVertices.splice(removedIndex, 1);
+                        selectedVert = val;
+                        hit = true;
                         return true;
                     }
                 });
 
-                console.log(removedId);
-
-                graphEdges = graphEdges.filter((val) => {
-                    return val.a.id !== removedId && val.b.id !== removedId;
-                });
-
-                if(removedIndex === -1) return;
-
-                for(let i = removedIndex; i < graphVertices.length; i++)
-                {
-                    graphVertices[i].id = i;
-                }
+                if(!hit) selectedVert = null;
 
                 DrawCanvas();
             }
