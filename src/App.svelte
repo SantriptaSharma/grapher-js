@@ -1,12 +1,14 @@
 <script lang="ts">
 	import DisplayCanvas from "./components/DisplayCanvas.svelte";
 	import GridCanvas from "./components/GridCanvas.svelte";
+	import HelpModal from "./components/HelpModal.svelte";
 	import { GraphVertex } from "./library/graphelement";
 	import { Color } from "./library/color";
 
 	import FaTrash from 'svelte-icons/fa/FaTrash.svelte';
 
 	let isSidebarOpen = true;
+	let helpModalOpen = false;
 	let gridCanvas : GridCanvas;
 	let display : DisplayCanvas;
 	let selected : GraphVertex = null;
@@ -27,17 +29,21 @@
 	}
 </script>
 
+{#if helpModalOpen}
+<HelpModal on:close = {() => {helpModalOpen = false}}/>
+{/if}
 <aside style:left = {isSidebarOpen ? 0 : null} on:wheel|preventDefault = {(e) => {gridCanvas.OnWheelEvent(e)}} 
 	on:mousedown|preventDefault= {(e) => {gridCanvas.OnMouseDown(e)}} on:mouseup|preventDefault = {(e) => {gridCanvas.OnMouseUp(e)}} 
 	on:mousemove|preventDefault = {(e) => {gridCanvas.OnMouseMove(e)}} on:contextmenu|preventDefault|stopPropagation>
 	<div id = "sidebar-toggle" on:click = {() => {isSidebarOpen = !isSidebarOpen}}></div>
 	{#if selected !== null}
 		<h2>Vertex {display.IdToName(selected.id)}</h2>
-		<span>Recolor: <input type = "color" bind:this = {colorInput} on:change = {OnColorChange} id = "color-picker" value = {color}/></span>
-		<button on:click = {() => {display.DeleteSelected();}} id = "delete-button"><FaTrash /></button>
+		<div id = "recolor">Recolor: <input type = "color" bind:this = {colorInput} on:change = {OnColorChange} id = "color-picker" value = {color}/></div>
+		<button on:click = {() => {display.DeleteSelected();}} id = "delete-button">Delete <div id = "delete-icon"><FaTrash /></div></button>
 	{:else}
 		<h2>Graph Options</h2>
 	{/if}
+	<button id = "help-button" on:click = {() => {helpModalOpen = !helpModalOpen}}>Help</button>
 </aside>
 <main>
 	<GridCanvas bind:this = {gridCanvas} />
@@ -81,17 +87,51 @@
 		align-items: flex-start;
 	}
 
-	#delete-button
+	button
 	{
 		padding: 12px;
 		border-radius: 8px;
 		border: none;
-		width: 64px;
-		height: 64px;
 		align-self: center;
-		color: red;
 
+		font-size: large;
+
+		display: flex;
+		flex-direction: row;
+		gap: 8px;
+		justify-content: center;
+		align-items: center;
 		cursor: pointer;
+		transition-duration: 0.1s;
+	}
+
+	#recolor
+	{
+		display: flex;
+	}
+
+	#delete-icon
+	{
+		width: 24px;
+		height: 24px;
+		display: inline-block;
+		color: red;
+		overflow: hidden;
+	}
+
+	#help-button
+	{
+		position: absolute;
+		bottom: 30px;
+		gap: 2px;
+	}
+
+	#help-icon
+	{
+		width: 20px;
+		height: 20px;
+		display: inline-block;
+		overflow: hidden;
 	}
 
 	#color-picker
