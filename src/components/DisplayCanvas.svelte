@@ -186,6 +186,11 @@
         DrawCanvas();
     }
 
+    export function Deselect()
+    {
+        selectedVert = null;
+    }
+
     onMount(() => {
         canvasContext = canvasElement.getContext("2d");
 
@@ -219,7 +224,7 @@
                     }
                 });
 
-                if(!hit) selectedVert = null;
+                if(!hit) Deselect();
 
                 DrawCanvas();
             }

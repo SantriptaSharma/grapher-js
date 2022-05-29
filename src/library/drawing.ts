@@ -83,7 +83,7 @@ export function DebugDrawBBox(ctx : CanvasRenderingContext2D, bbox : BBox, viewp
     let pos = viewport.UnitToPixel(bbox.p);
     ctx.beginPath();
     ctx.lineWidth = 8;
-    ctx.strokeStyle = "#ff000044";
+    ctx.strokeStyle = "#ff122388";
     ctx.strokeRect(pos.x, pos.y, bbox.w / viewport.scale, bbox.h / viewport.scale);
 }
 
