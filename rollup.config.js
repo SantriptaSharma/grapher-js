@@ -54,7 +54,7 @@ export default {
 		typescript({
 			sourceMap: !production,
 			inlineSources: !production,
-			rootDir: "./src/"
+			rootDirs: ["./src/**/*"]
 		}),
 		commonjs(),
 

@@ -4,7 +4,6 @@
 	import HelpModal from "./components/HelpModal.svelte";
 	import Sidebar from "./components/Sidebar.svelte";
 	import { GraphVertex } from "./library/graphelement";
-	import { Color } from "./library/color";
 
 	let helpModalOpen = false;
 	let gridCanvas : GridCanvas;
@@ -13,7 +12,7 @@
 </script>
 
 {#if helpModalOpen}
-<HelpModal on:close = {() => {helpModalOpen = false}}/>
+<HelpModal on:close = {() => {helpModalOpen = false}} />
 {/if}
 <Sidebar {gridCanvas} {display} {selected} on:help = {() => helpModalOpen = !helpModalOpen} />
 <main>

@@ -27,6 +27,11 @@ export class GraphVertex
 
         this.box = new BBox({p: Point.Subtract(pos, {x: radius, y: radius}), w: 2 * radius, h: 2 * radius}).Expanded(0.05);
     }
+
+    RecalculateExtents()
+    {
+        this.box = new BBox({p: Point.Subtract(this.pos, {x: this.radius, y: this.radius}), w: 2 * this.radius, h: 2 * this.radius}).Expanded(0.05);
+    }
 }
 
 export class GraphEdge

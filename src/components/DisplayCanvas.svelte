@@ -9,6 +9,7 @@
 
     import { viewport } from "../stores/viewport";
     import { mouseState, type MouseState } from "../stores/mouse";
+    import { snapshots, type Snapshot } from "../stores/snapshot";
 
     export let selectedVert : GraphVertex = null;
 
@@ -186,9 +187,50 @@
         DrawCanvas();
     }
 
+    export function Dirty()
+    {
+        DrawCanvas();
+    }
+
     export function Deselect()
     {
         selectedVert = null;
+    }
+
+    export function Clear()
+    {
+        Deselect();
+        graphVertices = [];
+        graphEdges = [];
+        drawBuffer = [];
+        DrawCanvas();
+    }
+
+    export function Load(snap : Snapshot)
+    {
+        Clear();
+
+        graphVertices = snap.verts.map(({id, pos, radius, color}) => new GraphVertex({id, pos, radius, color: Color.FromRGBA(color.r, color.g, color.b, 1.0)}));
+        graphEdges = snap.edges.map(({a, b}) => new GraphEdge(a, b));
+
+        DrawCanvas();
+    }
+
+    export function Save(name : string)
+    {
+        if(name == null || name.trim() === "")
+        {
+            name = new Date().toUTCString();
+        }
+
+        let snap : Snapshot = {
+            name,
+            id: $snapshots.length,
+            verts: graphVertices.map(({id, pos, radius, color}) => new GraphVertex({id, pos, radius, color})),
+            edges: graphEdges.map(({a, b}) => new GraphEdge(a, b))
+        };
+
+        snapshots.add(snap);
     }
 
     onMount(() => {
