@@ -97,13 +97,13 @@
 		<h2>Graph Options</h2>
 		<div id = "scroll-view">
 			<Foldup title = "Import & Export">
-				Thing is being enjoyed to be honest <br> <br> and what of it <br><br> good thing no?
+				WIP
 			</Foldup>
 			<Foldup title = "Mathematics">
-				
+				WIP
 			</Foldup>
 			<Foldup title = "Simulation">
-				Thing is being enjoyed to be honest <br> <br> and what of it <br><br> good thing no?
+				WIP
 			</Foldup>
 			<Foldup title = "Snapshots">
 				<div id = "adder">
