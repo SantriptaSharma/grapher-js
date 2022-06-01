@@ -211,7 +211,7 @@
         Clear();
 
         graphVertices = snap.verts.map(({id, pos, radius, color}) => new GraphVertex({id, pos, radius, color: Color.FromRGBA(color.r, color.g, color.b, 1.0)}));
-        graphEdges = snap.edges.map(({a, b}) => new GraphEdge(a, b));
+        graphEdges = snap.edges.map(({a, b}) => new GraphEdge(graphVertices[a], graphVertices[b]));
 
         DrawCanvas();
     }
@@ -227,7 +227,7 @@
             name,
             id: $snapshots.length,
             verts: graphVertices.map(({id, pos, radius, color}) => new GraphVertex({id, pos, radius, color})),
-            edges: graphEdges.map(({a, b}) => new GraphEdge(a, b))
+            edges: graphEdges.map(({a, b}) => ({a: a.id, b: b.id}))
         };
 
         snapshots.add(snap);

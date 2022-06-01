@@ -5,7 +5,7 @@ export type Snapshot = {
     name : string,
     id : number,
     verts : GraphVertex[],
-    edges : GraphEdge[]
+    edges : {a: number, b: number}[]
 };
 
 type SnapshotStore = {
