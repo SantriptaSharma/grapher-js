@@ -1,4 +1,5 @@
 <script lang="ts">
+import { createEventDispatcher } from "svelte";
 import { slide } from "svelte/transition";
 import { cubicInOut } from "svelte/easing";
 import FaCaretDown from "svelte-icons/fa/FaCaretDown.svelte";
@@ -6,10 +7,18 @@ import FaCaretUp from "svelte-icons/fa/FaCaretUp.svelte";
 
 export let title : string;
 export let open : boolean = false;
+export let index : number = undefined;
+const dispatch = createEventDispatcher();
+
+function Toggle()
+{
+    open = !open;
+    dispatch("toggle", index);
+}
 </script>
 
 <div class = "container">
-    <h3 style:cursor = "pointer" on:click = {() => open = !open}>{title} <div id = "fold-icon">
+    <h3 style:cursor = "pointer" on:click = {Toggle}>{title} <div id = "fold-icon">
         {#if open}
         <FaCaretUp />
         {:else}

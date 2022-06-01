@@ -24,6 +24,7 @@
 	let radius : number = 0; 
 	let position : Point = Point.Zero;
 	let snapName : string = "";
+	let foldups : boolean[] = [false, false, false, false];
 
     const helpDispatcher = createEventDispatcher();
 
@@ -71,6 +72,16 @@
 		display.Dirty();
 	}
 
+	function FoldoutToggled(ev : any)
+	{
+		let ind = ev.detail;
+		if(typeof ind !== "number") return;
+
+		if(ind === undefined) return;
+		
+		foldups[ind] = !foldups[ind];
+	}
+
     $: if(selected !== null)
 	{
 		color = selected.color.ToString().slice(0, 7);
@@ -96,16 +107,16 @@
 	{:else}
 		<h2>Graph Options</h2>
 		<div id = "scroll-view">
-			<Foldup title = "Import & Export">
+			<Foldup title = "Import & Export" on:toggle = {FoldoutToggled} open = {foldups[0]} index = {0}>
 				WIP
 			</Foldup>
-			<Foldup title = "Mathematics">
+			<Foldup title = "Mathematics" on:toggle = {FoldoutToggled} open = {foldups[1]} index = {1}>
 				WIP
 			</Foldup>
-			<Foldup title = "Simulation">
+			<Foldup title = "Simulation" on:toggle = {FoldoutToggled} open = {foldups[2]} index = {2}>
 				WIP
 			</Foldup>
-			<Foldup title = "Snapshots">
+			<Foldup title = "Snapshots" on:toggle = {FoldoutToggled} open = {foldups[3]} index = {3}>
 				<div id = "adder">
 					<input type = "text" size = 30 placeholder = "Snap name" bind:value = {snapName} />
 					<button on:click = {() => display.Save(snapName)}>Save</button>
