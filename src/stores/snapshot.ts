@@ -28,7 +28,7 @@ function CreateSnapshotStore() : SnapshotStore{
         
         loaded = obj.map((v) => {
             let verts = v.verts.map(({id, pos, color, radius}) => new GraphVertex({id, pos, color, radius}));
-            let edges = v.edges.map(({a, b}) => new GraphEdge(a, b));
+            let edges = v.edges.map(({a, b}) => ({a, b}));
 
             return {name: v.name, id: v.id, verts, edges}
         });
