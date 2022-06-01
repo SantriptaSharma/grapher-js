@@ -86,10 +86,10 @@
 	{#if selected !== null}
 		<h2>Vertex {display.IdToName(selected.id)}</h2>
 		<div id = "position">
-			Position: (<input type = "text" size = 5 value = {position.x.toPrecision(5)} bind:this = {xInput} on:change|trusted = {OnPositionChange} />, <input type = "text" size = 5 value = {position.y.toPrecision(5)} bind:this = {yInput} on:change|trusted = {OnPositionChange} />)
+			Position: (<input type = "number" size = 4 min = -15 max = 15 step = 0.1 value = {position.x.toPrecision(5)} bind:this = {xInput} on:change|trusted = {OnPositionChange} />, <input type = "number" size = 4 min = -15 max = 15 step = 0.1 value = {position.y.toPrecision(5)} bind:this = {yInput} on:change|trusted = {OnPositionChange} />)
 		</div>
 		<div id = "radius">
-			Radius: <input type = "text" size = 5 value = {radius.toPrecision(3)} bind:this = {radiusInput} on:change|trusted = {OnRadiusChange}/>
+			Radius: <input type = "number" size = 4 min = 0.12 max = 12 step = 0.05 value = {radius.toPrecision(3)} bind:this = {radiusInput} on:change|trusted = {OnRadiusChange}/>
 		</div>
 		<div id = "recolor">Color:&nbsp;<input type = "color" bind:this = {colorInput} on:change = {OnColorChange} id = "color-picker" value = {color}/></div>
 		<button on:click = {() => {display.DeleteSelected();}} id = "delete-button">Delete <div id = "delete-icon"><FaTrash /></div></button>
@@ -201,7 +201,7 @@
 
     #color-picker
 	{
-		padding: unset;
+		padding: 1px;
 	}
 
 	#scroll-view
