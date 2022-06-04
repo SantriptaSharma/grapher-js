@@ -5,10 +5,10 @@
     import DisplayCanvas from "./DisplayCanvas.svelte";
 	import Foldup from './ui/Foldup.svelte';
 	import SnapshotDisplay from './ui/SnapshotDisplay.svelte';
-    import { GraphVertex } from "../library/graphelement";
+    import { GraphEdge, GraphVertex } from "../library/graphelement";
     import { Color } from "../library/color";
 	import { Point } from '../library/point';
-	import { ClampValue } from '../library/helpers';
+	import { ClampValue, ImportPlacer } from '../library/helpers';
     
     import FaTrash from 'svelte-icons/fa/FaTrash.svelte';
 	import { snapshots, type Snapshot } from '../stores/snapshot';
@@ -16,10 +16,12 @@
 	export let gridCanvas : GridCanvas;
     export let display : DisplayCanvas;
     export let selected : GraphVertex;
+
     let open : boolean = true;
     let colorInput : HTMLInputElement;
 	let xInput : HTMLInputElement, yInput : HTMLInputElement;
-	let radiusInput :HTMLInputElement;
+	let radiusInput : HTMLInputElement;
+	let matrixString : string = "";
     let color : string = "#000000";
 	let radius : number = 0; 
 	let position : Point = Point.Zero;
@@ -72,7 +74,7 @@
 		display.Dirty();
 	}
 
-	function FoldoutToggled(ev : any)
+	function FoldupToggled(ev : any)
 	{
 		let ind = ev.detail;
 		if(typeof ind !== "number") return;
@@ -80,6 +82,84 @@
 		if(ind === undefined) return;
 		
 		foldups[ind] = !foldups[ind];
+	}
+
+	function Import()
+	{
+		let lines : String[] = matrixString.split("\n").filter(s => s.trim() !== "");
+		let size = lines.length;
+		if(size === 0 || size === 1) return;
+
+		let matrix : boolean[][] = new Array(size);
+		for(let i = 0; i < size; i++)
+		{
+			let n = new Array(size);
+			matrix[i] = n.fill(false);
+		}
+
+		const chars = ['0', '1'];
+
+		for(let i = 0; i < size; i++)
+		{
+			let l = lines[i].replaceAll(" ", "");
+
+			if(l.length !== size)
+			{
+				alert(`Invalid Adjacency Matrix: Matrix is not square.\n(Height = ${size}, Row ${i+1} Length = ${l.length}).`);
+				return;
+			}
+
+			for(let j = i+1; j < size; j++)
+			{
+				let ch = l[j];
+
+				if(chars.indexOf(ch) === -1)
+				{
+					alert(`Invalid Adjacency Matrix: Matrix contains non-boolean (not 0 or 1) value.`);
+					return;
+				}
+
+				let connected = ch === "1";
+				matrix[i][j] = connected;
+				matrix[j][i] = connected;
+			}
+		}
+
+		let degree = matrix.map((v, i) => ({ind: i, d: v.reduce<number>((d, adj) => adj ? d + 1 : d, 0)})).sort((a,b) => a.d - b.d);
+
+		let verts : GraphVertex[] = ImportPlacer(matrix, degree);
+		let edges : GraphEdge[] = [];
+
+		for(let i = 0; i < size; i++)
+		{
+			matrix[i].map((v, j) =>{
+				if(j > i && v)
+				{
+					edges.push(new GraphEdge(verts[i], verts[j]));
+				}
+			});
+		}
+
+		display.Set(verts, edges);
+	}
+
+	function Export()
+	{
+		let graph = display.Get();
+
+		let matrix : boolean[][] = new Array(graph.verts.length);
+		for(let i = 0; i < matrix.length; i++)
+		{
+			let inner : boolean[] = new Array(graph.verts.length);
+			matrix[i] = inner.fill(false);
+		}
+
+		graph.edges.every(e => {
+			matrix[e.b.id][e.a.id] = matrix[e.a.id][e.b.id] = true;
+			return true;
+		});
+
+		matrixString = matrix.map((v, i) => v.reduce<string>((s, c) => s + (c ? "1" : "0"), "")).join("\n");
 	}
 
     $: if(selected !== null)
@@ -107,16 +187,23 @@
 	{:else}
 		<h2>Graph Options</h2>
 		<div id = "scroll-view">
-			<Foldup title = "Import & Export" on:toggle = {FoldoutToggled} open = {foldups[0]} index = {0}>
+			<Foldup title = "Import & Export" on:toggle = {FoldupToggled} open = {foldups[0]} index = {0}>
+				<div id = "importer-flex">
+					<h4>Adjacency Matrix:</h4>
+					<textarea bind:value = {matrixString} rows = 3 wrap = off on:mousedown|stopPropagation = {() => {}}></textarea>
+					<div id = "controls">
+						<button on:click = {Import}>Import</button>
+						<button on:click = {Export}>Export</button>
+					</div>
+				</div>
+			</Foldup>
+			<Foldup title = "Mathematics" on:toggle = {FoldupToggled} open = {foldups[1]} index = {1}>
 				WIP
 			</Foldup>
-			<Foldup title = "Mathematics" on:toggle = {FoldoutToggled} open = {foldups[1]} index = {1}>
+			<Foldup title = "Simulation" on:toggle = {FoldupToggled} open = {foldups[2]} index = {2}>
 				WIP
 			</Foldup>
-			<Foldup title = "Simulation" on:toggle = {FoldoutToggled} open = {foldups[2]} index = {2}>
-				WIP
-			</Foldup>
-			<Foldup title = "Snapshots" on:toggle = {FoldoutToggled} open = {foldups[3]} index = {3}>
+			<Foldup title = "Snapshots" on:toggle = {FoldupToggled} open = {foldups[3]} index = {3}>
 				<div id = "adder">
 					<input type = "text" size = 30 placeholder = "Snap name" bind:value = {snapName} />
 					<button on:click = {() => display.Save(snapName)}>Save</button>
@@ -155,6 +242,62 @@
 		gap: 8px;
 		flex-direction: column;
 		align-items: flex-start;
+	}
+
+	#importer-flex
+	{
+		display: flex;
+		flex-direction: column;
+		width: 100%;
+		align-items: center;
+	}
+
+	#importer-flex textarea
+	{
+		width: 100%;
+	}
+
+	#importer-flex h4
+	{
+		width: 100%;
+		text-align: left;
+		margin: 0 0 12px 0;
+	}
+
+	#importer-flex #controls
+	{
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		gap: 8px;
+	}
+
+	#importer-flex button
+	{
+		padding: 8px 12px;
+		border-radius: 6px;
+		border: none;
+		align-self: center;
+
+		font-size: large;
+
+		display: flex;
+		flex-direction: row;
+		gap: 8px;
+		justify-content: center;
+		align-items: center;
+		cursor: pointer;
+		transition-duration: 0.1s;
+	}
+
+	#importer-flex button:hover
+	{
+		background-color: aliceblue;
+	}
+
+	#importer-flex button:active
+	{
+		background-color: #cfcfcf;	
 	}
 
 	#static-buttons *, #delete-button

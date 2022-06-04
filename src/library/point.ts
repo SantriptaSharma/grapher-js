@@ -28,6 +28,12 @@ export class Point
         return new Point({x: a.x * b, y: a.y * b});
     }
 
+    static OnUnitCircle(deg : number) : Point
+    {
+        let rad = deg * (Math.PI / 180)
+        return new Point({x: Math.sin(rad), y: Math.cos(rad)});
+    }
+
     static Subtract(a : Point, b : Point) : Point
     {
         return this.Add(a, this.Scale(b, -1));

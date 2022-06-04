@@ -12,12 +12,12 @@
     import { snapshots, type Snapshot } from "../stores/snapshot";
 
     export let selectedVert : GraphVertex = null;
-
-    let canvasElement : HTMLCanvasElement;
-    let canvasContext : CanvasRenderingContext2D; 
-
+    export let canDraw : boolean = true;
+    
     let graphVertices : GraphVertex[] = [];
     let graphEdges : GraphEdge[] = [];
+    let canvasElement : HTMLCanvasElement;
+    let canvasContext : CanvasRenderingContext2D; 
 
     let drawBuffer : Point[] = [];
 
@@ -73,6 +73,12 @@
         const drawWidthPixel = 5;
         const drawColor = Color.FromRGBA(0.1, 0.1, 0.1, 1);
 
+        if(!canDraw)
+        {
+            document.body.style.cursor = "not-allowed";
+            return;
+        }
+
         if(drawBuffer.length === 0)
         {
             drawBuffer = [newPosition];
@@ -87,6 +93,12 @@
 
     function DoneDrawing()
     {
+        if(!canDraw)
+        {
+            document.body.style.cursor = "unset";
+            return;
+        }
+        
         // Do analysis on the drawing
         let viewBox = $viewport.ToBox();
         let visibleVertices = graphVertices.filter(val => val.box.Intersects(viewBox));
@@ -185,6 +197,19 @@
         selectedVert.color = col;
 
         DrawCanvas();
+    }
+
+    export function Set(verts? : GraphVertex[], edges? : GraphEdge[])
+    {
+        if(verts) graphVertices = verts;
+        if(edges) graphEdges = edges;
+
+        DrawCanvas();
+    }
+
+    export function Get() : {verts: GraphVertex[], edges: GraphEdge[]}
+    {
+        return {verts: graphVertices, edges: graphEdges};
     }
 
     export function Dirty()
