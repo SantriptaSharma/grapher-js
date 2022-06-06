@@ -125,7 +125,7 @@
 			}
 		}
 
-		let degree = matrix.map((v, i) => ({ind: i, d: v.reduce<number>((d, adj) => adj ? d + 1 : d, 0)})).sort((a,b) => a.d - b.d);
+		let degree = matrix.map((v, i) => ({ind: i, d: v.reduce<number>((d, adj) => adj ? d + 1 : d, 0)})).sort((a,b) => b.d - a.d);
 
 		let verts : GraphVertex[] = ImportPlacer(matrix, degree);
 		let edges : GraphEdge[] = [];
