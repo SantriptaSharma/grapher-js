@@ -162,7 +162,8 @@
 			coloring = matrix.length === 1 ? [0] : null;
 		}
 		
-		coloring = new Array<number>(matrix.length).fill(0);
+		coloring = new Array<number>(matrix.length).fill(-1);
+		coloring[0] = 0;
 		chromaticNumber = 1;
 		preColor = null;
 
