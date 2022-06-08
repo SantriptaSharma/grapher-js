@@ -27,6 +27,9 @@
 	let position : Point = Point.Zero;
 	let snapName : string = "";
 	let foldups : boolean[] = [false, false, false, false];
+	let chromaticNumber : number = -1;
+	let coloring : number[] = null;
+	let preColor : Snapshot = null;
 
     const helpDispatcher = createEventDispatcher();
 
@@ -145,21 +148,92 @@
 
 	function Export()
 	{
-		let graph = display.Get();
-
-		let matrix : boolean[][] = new Array(graph.verts.length);
-		for(let i = 0; i < matrix.length; i++)
-		{
-			let inner : boolean[] = new Array(graph.verts.length);
-			matrix[i] = inner.fill(false);
-		}
-
-		graph.edges.every(e => {
-			matrix[e.b.id][e.a.id] = matrix[e.a.id][e.b.id] = true;
-			return true;
-		});
+		let matrix = display.GetMatrix();
 
 		matrixString = matrix.map((v, i) => v.reduce<string>((s, c) => s + (c ? "1" : "0"), "")).join("\n");
+	}
+
+	function CalculateChromaticNumber()
+	{
+		const matrix = display.GetMatrix();
+		if(matrix.length <= 1) 
+		{
+			chromaticNumber = matrix.length;
+			coloring = matrix.length === 1 ? [0] : null;
+		}
+		
+		coloring = new Array<number>(matrix.length).fill(0);
+		chromaticNumber = 1;
+		preColor = null;
+
+		const createColor = () => Math.max(...coloring) + 1;
+		const neighbours = (a : number) => {
+			const n = [];
+
+			for(let i = 0; i < matrix[a].length; i++)
+			{
+				if(i === a) continue;
+				if(matrix[a][i]) n.push(i);
+			}
+
+			return n;
+		};
+
+		for(let i = 1; i < matrix.length; i++)
+		{
+			let possibleColors = Array.from({length: createColor()}, (v, i) => i);
+
+			const n = neighbours(i);
+			n.forEach(neighbour => {
+				possibleColors = possibleColors.filter((c) => c !== coloring[neighbour]);
+			});
+
+			if(possibleColors.length > 0)
+			{
+				coloring[i] = Math.min(...possibleColors);
+			}
+			else
+			{
+				coloring[i] = createColor();
+				chromaticNumber += 1;
+			}
+		}
+	}
+
+	function ToggleColoring()
+	{
+		if(preColor === null)
+		{
+			let graph = display.Get();
+
+			if(graph.verts.length === 0) return;
+
+			if(coloring === null || coloring.length < graph.verts.length)
+				CalculateChromaticNumber();
+
+			preColor = display.Save("pre", false);
+
+			// It would be extremely funny if two random colors intersect, waht are the odds?
+			const colors = Array.from({length: Math.max(...coloring) + 1}, (v, i) => Color.RandomColor());
+
+			for(let i = 0; i < graph.verts.length; i++)
+			{
+				graph.verts[i].color = colors[coloring[i]];
+			}
+
+			display.Set(graph.verts, graph.edges, false);
+		}
+		else
+		{
+			display.Load(preColor);
+		}
+	}
+
+	export function InvalidateColoring()
+	{
+		chromaticNumber = -1;
+		coloring = null;
+		preColor = null;
 	}
 
     $: if(selected !== null)
@@ -198,7 +272,13 @@
 				</div>
 			</Foldup>
 			<Foldup title = "Mathematics" on:toggle = {FoldupToggled} open = {foldups[1]} index = {1}>
-				WIP
+				<div id = "chromatic-holder">
+					<div>Chromatic Number: {chromaticNumber < 0 ? "Unknown" : chromaticNumber }</div>
+					<div id = "chromatic-actions">
+						<button on:click = {CalculateChromaticNumber}>Recalculate</button>
+						<button on:click = {ToggleColoring}>{preColor === null ? "Color" : "Reset Color"}</button>
+					</div>
+				</div>
 			</Foldup>
 			<Foldup title = "Simulation" on:toggle = {FoldupToggled} open = {foldups[2]} index = {2}>
 				WIP
@@ -224,7 +304,7 @@
 	aside
 	{
 		width: 384px;
-		height: 60vh;
+		height: 550px;
 		z-index: 50;
 		box-sizing: border-box;
 

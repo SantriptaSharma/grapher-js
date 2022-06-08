@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { onMount } from "svelte";
+    import { onMount, createEventDispatcher } from "svelte";
 
     import { Point } from "../library/point";
     import type { BBox, GridView } from "../library/gridview";
@@ -20,6 +20,7 @@
     let canvasContext : CanvasRenderingContext2D; 
 
     let drawBuffer : Point[] = [];
+    const dispatch = createEventDispatcher();
 
     export function IdToName(id : number) : string
     {
@@ -35,7 +36,7 @@
         let text = name.reverse().join("");
         return text;
     }
-
+    
     function DrawCanvas()
     {
         ClearCanvas(canvasContext);
@@ -121,6 +122,7 @@
         if(start !== end && start !== null && end !== null && edgeIndex === -1)
         {
             graphEdges.push(new GraphEdge(start, end));
+            dispatch("changed");
             drawBuffer = [];
             DrawCanvas();
             return;
@@ -128,6 +130,7 @@
         else if (edgeIndex !== -1)
         {
             graphEdges.splice(edgeIndex, 1);
+            dispatch("changed");
             drawBuffer = [];
             DrawCanvas();
             return;
@@ -162,7 +165,10 @@
         let hasSpace = graphVertices.every((v) => !nVert.box.Intersects(v.box));
 
         if(hasSpace && start === null && end === null)
+        {
             graphVertices.push(nVert);
+            dispatch("changed");
+        }
 
         drawBuffer = [];
         DrawCanvas();
@@ -186,6 +192,7 @@
         }
 
         selectedVert = null;
+        dispatch("changed");
 
         DrawCanvas();
     }
@@ -199,10 +206,11 @@
         DrawCanvas();
     }
 
-    export function Set(verts? : GraphVertex[], edges? : GraphEdge[])
+    export function Set(verts? : GraphVertex[], edges? : GraphEdge[], toDispatch : boolean = true)
     {
         if(verts) graphVertices = verts;
         if(edges) graphEdges = edges;
+        if(toDispatch) dispatch("changed");
 
         DrawCanvas();
     }
@@ -210,6 +218,24 @@
     export function Get() : {verts: GraphVertex[], edges: GraphEdge[]}
     {
         return {verts: graphVertices, edges: graphEdges};
+    }
+
+    export function GetMatrix() : boolean[][]
+    {
+        let matrix : boolean[][] = new Array(graphVertices.length);
+
+        for(let i = 0; i < matrix.length; i++)
+		{
+			let inner : boolean[] = new Array(graphVertices.length);
+			matrix[i] = inner.fill(false);
+		}
+
+		graphEdges.every(e => {
+			matrix[e.b.id][e.a.id] = matrix[e.a.id][e.b.id] = true;
+			return true;
+		});
+
+        return matrix;
     }
 
     export function Dirty()
@@ -228,6 +254,8 @@
         graphVertices = [];
         graphEdges = [];
         drawBuffer = [];
+        dispatch("changed");
+
         DrawCanvas();
     }
 
@@ -237,11 +265,12 @@
 
         graphVertices = snap.verts.map(({id, pos, radius, color}) => new GraphVertex({id, pos, radius, color: Color.FromRGBA(color.r, color.g, color.b, 1.0)}));
         graphEdges = snap.edges.map(({a, b}) => new GraphEdge(graphVertices[a], graphVertices[b]));
+        dispatch("changed");
 
         DrawCanvas();
     }
 
-    export function Save(name : string)
+    export function Save(name : string, save : boolean = true)
     {
         if(name == null || name.trim() === "")
         {
@@ -255,7 +284,8 @@
             edges: graphEdges.map(({a, b}) => ({a: a.id, b: b.id}))
         };
 
-        snapshots.add(snap);
+        if(save) snapshots.add(snap);
+        return snap;
     }
 
     onMount(() => {
