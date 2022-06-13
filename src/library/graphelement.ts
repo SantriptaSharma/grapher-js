@@ -38,12 +38,14 @@ export class GraphEdge
 {
     a : GraphVertex;
     b : GraphVertex;
+    marked : boolean;
     box : BBox;
 
     constructor(a : GraphVertex, b : GraphVertex)
     {
         this.a = a;
         this.b = b;
+        this.marked = false;
 
         let boxPosition : Point = {x: Math.min(a.pos.x, b.pos.x), y: Math.min(a.pos.y, b.pos.y)};
         let boxWidth : number = Math.max(a.pos.x - boxPosition.x, b.pos.x - boxPosition.x);

@@ -36,19 +36,36 @@
         let text = name.reverse().join("");
         return text;
     }
+
+    export function NameToId(name : string) : number
+    {
+        name = name.toUpperCase();
+
+        let place = 1
+        let id = 0;
+        for(let i = name.length - 1; i >= 0; i--)
+        {
+            let digit = name.charCodeAt(i) - "A".charCodeAt(0) + (i !== name.length - 1 ? 1 : 0);
+            id += place * digit;
+            place *= 26;
+        }
+
+        return id;
+    }
     
     function DrawCanvas()
     {
         ClearCanvas(canvasContext);
         
         let viewBox : BBox = $viewport.ToBox();
+        const markedColor = new Color("#8cc63f");
 
         graphEdges.forEach((edge) => {
             if(edge.box.Intersects(viewBox))
             {
                 let screenPosA = $viewport.UnitToPixel(edge.a.pos);
                 let screenPosB = $viewport.UnitToPixel(edge.b.pos);
-                DrawLine({ctx: canvasContext, p1: screenPosA, p2: screenPosB});
+                DrawLine({ctx: canvasContext, p1: screenPosA, p2: screenPosB, color: edge.marked ? markedColor : undefined});
             }
         });
 

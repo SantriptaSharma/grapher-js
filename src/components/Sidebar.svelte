@@ -13,6 +13,8 @@
     import FaTrash from 'svelte-icons/fa/FaTrash.svelte';
 	import { snapshots, type Snapshot } from '../stores/snapshot';
 
+	import { FibonacciHeap } from "@tyriar/fibonacci-heap";
+
 	export let gridCanvas : GridCanvas;
     export let display : DisplayCanvas;
     export let selected : GraphVertex;
@@ -30,6 +32,8 @@
 	let chromaticNumber : number = -1;
 	let coloring : number[] = null;
 	let preColor : Snapshot = null;
+
+	let pathFrom : HTMLInputElement, pathTo : HTMLInputElement;
 
     const helpDispatcher = createEventDispatcher();
 
@@ -237,6 +241,123 @@
 		preColor = null;
 	}
 
+	function FindPath()
+	{
+		const from = pathFrom.value;
+		const to = pathTo.value;
+
+		const graph = display.Get();
+		const matrix = display.GetMatrix();
+		const vert_count = graph.verts.length;
+
+		if(vert_count < 2)
+		{
+			alert("Not enough vertices to pathfind");
+			return;
+		}
+
+		const isAlphabet = (c) => (c.charCodeAt(0) >= 'a'.charCodeAt(0) && c.charCodeAt(0) <= 'z'.charCodeAt(0)) || (c.charCodeAt(0) >= 'A'.charCodeAt(0) && c.charCodeAt(0) <= 'Z'.charCodeAt(0));
+		console.log(Array.from(from));
+		if(!(Array.from(from).every(isAlphabet)))
+		{
+			alert("Invalid from argument, includes non-alphabetic characters");
+			return;
+		}
+
+		if(!(Array.from(to).every(isAlphabet)))
+		{
+			alert("Invalid to argument, includes non-alphabetic characters");
+			return;
+		}
+
+		const fromId = display.NameToId(from);
+		const toId = display.NameToId(to);
+
+		if(fromId === toId)
+		{
+			alert("From and To vertices cannot be the same");
+			return;
+		}
+
+		if(fromId < 0 || fromId >= vert_count)
+		{
+			alert("From vertex does not exist");
+			return;
+		}
+
+		if(toId < 0 || toId >= vert_count)
+		{
+			alert("To vertex does not exist");
+			return;
+		}
+
+		graph.edges.forEach((v) => v.marked = false);
+		const distance_between = (a : number, b : number) => Point.Distance(graph.verts[a].pos, graph.verts[b].pos);
+		const edge_connecting = (a : number, b : number) => graph.edges.findIndex((v, i) => (v.a === graph.verts[a] && v.b === graph.verts[b]) || (v.a === graph.verts[b] && v.b === graph.verts[a]))
+		const get_neighbours = (a : number) => {const neighbourList = []; matrix[a].forEach((v, i) => {if(v) neighbourList.push(i)}); return neighbourList;};
+
+		const heap = new FibonacciHeap<number, number>();
+		const distances : Array<number> = Array.from(new Array(vert_count), (_) => Infinity);
+		const previousInPath : Array<number> = Array.from(new Array(vert_count), (_) => undefined);
+		const heapNodes : Array<any> = Array.from(new Array(vert_count), undefined);
+		const vertsConsidered = [];
+
+		distances[fromId] = 0;
+
+		distances.forEach((v, i) => {
+			heapNodes[i] = heap.insert(v, i);
+		});
+
+		while(!heap.isEmpty())
+		{
+			const u = heap.extractMinimum();
+
+			vertsConsidered.push(u.value);
+
+			get_neighbours(u.value).forEach((vert) => {
+				if(vertsConsidered.findIndex((v) => vert === v) !== -1)
+				{
+					return;
+				}
+
+				const alt_dist_through_u = distances[u.value] + distance_between(u.value, vert);
+
+				if(alt_dist_through_u < distances[vert])
+				{
+					distances[vert] = alt_dist_through_u;
+					previousInPath[vert] = u.value;
+					heap.decreaseKey(heapNodes[vert], alt_dist_through_u);
+				}
+			});
+
+			if(u.value === toId)
+			{
+				break;
+			}
+		}
+
+		previousInPath[fromId] = undefined;
+
+		if(previousInPath[toId] === undefined)
+		{
+			alert("No Path Found");
+			return;
+		}
+
+		let cur = toId;
+		while(cur !== fromId)
+		{
+			const previous = previousInPath[cur];
+			if(previous === undefined) break;
+			const edgeToMark = edge_connecting(cur, previous);
+			if(edgeToMark === -1) break;
+			graph.edges[edgeToMark].marked = true;
+			cur = previous;
+		}
+
+		display.Set(graph.verts, graph.edges);
+	}
+
     $: if(selected !== null)
 	{
 		color = selected.color.ToString().slice(0, 7);
@@ -278,6 +399,12 @@
 					<div id = "chromatic-actions">
 						<button on:click = {CalculateChromaticNumber}>Recalculate</button>
 						<button on:click = {ToggleColoring}>{preColor === null ? "Color" : "Reset Color"}</button>
+					</div>
+				</div>
+				<div id = "pathfinding">
+					<div>Shortest Path from <input type = "text" size = {5} bind:this = {pathFrom}/> to <input type = "text" size = {5} bind:this = {pathTo}/></div>
+					<div>
+						<button on:click = {FindPath}>Find Path</button>
 					</div>
 				</div>
 			</Foldup>
@@ -351,62 +478,6 @@
 		justify-content: center;
 		align-items: center;
 		gap: 8px;
-	}
-
-	#importer-flex button
-	{
-		padding: 8px 12px;
-		border-radius: 6px;
-		border: none;
-		align-self: center;
-
-		font-size: large;
-
-		display: flex;
-		flex-direction: row;
-		gap: 8px;
-		justify-content: center;
-		align-items: center;
-		cursor: pointer;
-		transition-duration: 0.1s;
-	}
-
-	#importer-flex button:hover
-	{
-		background-color: aliceblue;
-	}
-
-	#importer-flex button:active
-	{
-		background-color: #cfcfcf;	
-	}
-
-	#static-buttons *, #delete-button
-	{
-		padding: 8px 12px;
-		border-radius: 6px;
-		border: none;
-		align-self: center;
-
-		font-size: large;
-
-		display: flex;
-		flex-direction: row;
-		gap: 8px;
-		justify-content: center;
-		align-items: center;
-		cursor: pointer;
-		transition-duration: 0.1s;
-	}
-
-	#static-buttons *:hover
-	{
-		background-color: aliceblue;
-	}
-
-	#static-buttons *:active
-	{
-		background-color: #cfcfcf;
 	}
 
 	#recolor
