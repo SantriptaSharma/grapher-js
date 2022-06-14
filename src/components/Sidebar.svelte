@@ -3,39 +3,41 @@
 
     import GridCanvas from "./GridCanvas.svelte";
     import DisplayCanvas from "./DisplayCanvas.svelte";
+
 	import Foldup from './ui/Foldup.svelte';
 	import SnapshotDisplay from './ui/SnapshotDisplay.svelte';
-    import { GraphEdge, GraphVertex } from "../library/graphelement";
+
+	import ImportExport from './sidebar/ImportExport.svelte';
+	import Mathematics from './sidebar/Mathematics.svelte';
+	import Simulation from './sidebar/Simulation.svelte';
+
+    import { GraphVertex } from "../library/graphelement";
     import { Color } from "../library/color";
 	import { Point } from '../library/point';
-	import { ClampValue, ImportPlacer } from '../library/helpers';
+	import { ClampValue } from '../library/helpers';
 	import { Dijkstra } from "../library/dijkstra";
     
     import FaTrash from 'svelte-icons/fa/FaTrash.svelte';
 	import { snapshots, type Snapshot } from '../stores/snapshot';
 
-	import { FibonacciHeap } from "@tyriar/fibonacci-heap";
-
 	export let gridCanvas : GridCanvas;
     export let display : DisplayCanvas;
     export let selected : GraphVertex;
 
-    let open : boolean = true;
+    let sidebarOpen : boolean = true;
     let colorInput : HTMLInputElement;
 	let xInput : HTMLInputElement, yInput : HTMLInputElement;
 	let radiusInput : HTMLInputElement;
-	let matrixString : string = "";
     let color : string = "#000000";
 	let radius : number = 0; 
 	let position : Point = Point.Zero;
+
 	let snapName : string = "";
 	let foldups : boolean[] = [false, false, false, false];
-	let chromaticNumber : number = -1;
-	let coloring : number[] = null;
-	let preColor : Snapshot = null;
 
-	let pathFrom : HTMLInputElement, pathTo : HTMLInputElement;
-
+	let mathematics : Mathematics;
+	let simulation : Simulation;
+	
     const helpDispatcher = createEventDispatcher();
 
     function OnColorChange()
@@ -92,217 +94,10 @@
 		foldups[ind] = !foldups[ind];
 	}
 
-	function Import()
+	export function InvalidateColoring(cleared : boolean)
 	{
-		let lines : String[] = matrixString.split("\n").filter(s => s.trim() !== "");
-		let size = lines.length;
-		if(size === 0 || size === 1) return;
-
-		let matrix : boolean[][] = new Array(size);
-		for(let i = 0; i < size; i++)
-		{
-			let n = new Array(size);
-			matrix[i] = n.fill(false);
-		}
-
-		const chars = ['0', '1'];
-
-		for(let i = 0; i < size; i++)
-		{
-			let l = lines[i].replaceAll(" ", "");
-
-			if(l.length !== size)
-			{
-				alert(`Invalid Adjacency Matrix: Matrix is not square.\n(Height = ${size}, Row ${i+1} Length = ${l.length}).`);
-				return;
-			}
-
-			for(let j = i+1; j < size; j++)
-			{
-				let ch = l[j];
-
-				if(chars.indexOf(ch) === -1)
-				{
-					alert(`Invalid Adjacency Matrix: Matrix contains non-boolean (not 0 or 1) value.`);
-					return;
-				}
-
-				let connected = ch === "1";
-				matrix[i][j] = connected;
-				matrix[j][i] = connected;
-			}
-		}
-
-		let degree = matrix.map((v, i) => ({ind: i, d: v.reduce<number>((d, adj) => adj ? d + 1 : d, 0)})).sort((a,b) => b.d - a.d);
-
-		let verts : GraphVertex[] = ImportPlacer(matrix, degree);
-		let edges : GraphEdge[] = [];
-
-		for(let i = 0; i < size; i++)
-		{
-			matrix[i].map((v, j) =>{
-				if(j > i && v)
-				{
-					edges.push(new GraphEdge(verts[i], verts[j]));
-				}
-			});
-		}
-
-		display.Set(verts, edges);
-	}
-
-	function Export()
-	{
-		let matrix = display.GetMatrix();
-
-		matrixString = matrix.map((v, i) => v.reduce<string>((s, c) => s + (c ? "1" : "0"), "")).join("\n");
-	}
-
-	function CalculateChromaticNumber()
-	{
-		const matrix = display.GetMatrix();
-		if(matrix.length <= 1) 
-		{
-			chromaticNumber = matrix.length;
-			coloring = matrix.length === 1 ? [0] : null;
-		}
-		
-		coloring = new Array<number>(matrix.length).fill(-1);
-		coloring[0] = 0;
-		chromaticNumber = 1;
-		preColor = null;
-
-		const createColor = () => Math.max(...coloring) + 1;
-		const neighbours = (a : number) => {
-			const n = [];
-
-			for(let i = 0; i < matrix[a].length; i++)
-			{
-				if(i === a) continue;
-				if(matrix[a][i]) n.push(i);
-			}
-
-			return n;
-		};
-
-		for(let i = 1; i < matrix.length; i++)
-		{
-			let possibleColors = Array.from({length: createColor()}, (v, i) => i);
-
-			const n = neighbours(i);
-			n.forEach(neighbour => {
-				possibleColors = possibleColors.filter((c) => c !== coloring[neighbour]);
-			});
-
-			if(possibleColors.length > 0)
-			{
-				coloring[i] = Math.min(...possibleColors);
-			}
-			else
-			{
-				coloring[i] = createColor();
-				chromaticNumber += 1;
-			}
-		}
-	}
-
-	function ToggleColoring()
-	{
-		if(preColor === null)
-		{
-			let graph = display.Get();
-
-			if(graph.verts.length === 0) return;
-
-			if(coloring === null || coloring.length < graph.verts.length)
-				CalculateChromaticNumber();
-
-			preColor = display.Save("pre", false);
-
-			// It would be extremely funny if two random colors intersect, waht are the odds?
-			const colors = Array.from({length: Math.max(...coloring) + 1}, (v, i) => Color.RandomColor());
-
-			for(let i = 0; i < graph.verts.length; i++)
-			{
-				graph.verts[i].color = colors[coloring[i]];
-			}
-
-			display.Set(graph.verts, graph.edges, false);
-		}
-		else
-		{
-			display.Load(preColor);
-		}
-	}
-
-	export function InvalidateColoring()
-	{
-		chromaticNumber = -1;
-		coloring = null;
-		preColor = null;
-	}
-
-	function FindPath()
-	{
-		const from = pathFrom.value;
-		const to = pathTo.value;
-
-		const graph = display.Get();
-		const matrix = display.GetMatrix();
-		const vert_count = graph.verts.length;
-
-		if(vert_count < 2)
-		{
-			alert("Not enough vertices to pathfind");
-			return;
-		}
-
-		const isAlphabet = (c) => (c.charCodeAt(0) >= 'a'.charCodeAt(0) && c.charCodeAt(0) <= 'z'.charCodeAt(0)) || (c.charCodeAt(0) >= 'A'.charCodeAt(0) && c.charCodeAt(0) <= 'Z'.charCodeAt(0));
-
-		if(!(Array.from(from).every(isAlphabet)))
-		{
-			alert("Invalid from argument, includes non-alphabetic characters");
-			return;
-		}
-
-		if(!(Array.from(to).every(isAlphabet)))
-		{
-			alert("Invalid to argument, includes non-alphabetic characters");
-			return;
-		}
-
-		const fromId = display.NameToId(from);
-		const toId = display.NameToId(to);
-
-		if(fromId === toId)
-		{
-			alert("From and To vertices cannot be the same");
-			return;
-		}
-
-		if(fromId < 0 || fromId >= vert_count)
-		{
-			alert("From vertex does not exist");
-			return;
-		}
-
-		if(toId < 0 || toId >= vert_count)
-		{
-			alert("To vertex does not exist");
-			return;
-		}
-
-		graph.edges.forEach((v) => v.marked = false);
-
-		const result = Dijkstra({ ...graph, matrix }, fromId, toId);
-
-		if(result.success)
-		{
-			result.edges.forEach((v) => {
-				graph.edges[v].marked = true;
-			})
-			display.Set(graph.verts, graph.edges);
-		}
+		if(foldups[1] && mathematics !== undefined) mathematics.InvalidateColoring();
+		if(foldups[2] && simulation !== undefined && cleared) simulation.InvalidateOnClear();
 	}
 
     $: if(selected !== null)
@@ -310,13 +105,13 @@
 		color = selected.color.ToString().slice(0, 7);
 		position = selected.pos;
 		radius = selected.radius;
-		open = true;
+		sidebarOpen = true;
 	}
 </script>
 
-<aside style:left = {open ? 0 : null} on:mousedown = {e => gridCanvas.OnMouseDown(e)} on:mouseup = {e => gridCanvas.OnMouseUp(e)} 
+<aside style:left = {sidebarOpen ? 0 : null} on:mousedown = {e => gridCanvas.OnMouseDown(e)} on:mouseup = {e => gridCanvas.OnMouseUp(e)} 
 	on:mousemove = {e => gridCanvas.OnMouseMove(e)} on:contextmenu|preventDefault>
-	<div id = "sidebar-toggle" on:click = {() => {open = !open}}></div>
+	<div id = "sidebar-toggle" on:click = {() => {sidebarOpen = !sidebarOpen}}></div>
 	{#if selected !== null}
 		<h2>Vertex {display.IdToName(selected.id)}</h2>
 		<div id = "position">
@@ -331,32 +126,13 @@
 		<h2>Graph Options</h2>
 		<div id = "scroll-view">
 			<Foldup title = "Import & Export" on:toggle = {FoldupToggled} open = {foldups[0]} index = {0}>
-				<div id = "importer-flex">
-					<h4>Adjacency Matrix:</h4>
-					<textarea bind:value = {matrixString} rows = 3 wrap = off on:mousedown|stopPropagation = {() => {}}></textarea>
-					<div id = "controls">
-						<button on:click = {Import}>Import</button>
-						<button on:click = {Export}>Export</button>
-					</div>
-				</div>
+				<ImportExport {display} />
 			</Foldup>
 			<Foldup title = "Mathematics" on:toggle = {FoldupToggled} open = {foldups[1]} index = {1}>
-				<div id = "chromatic-holder">
-					<div>Chromatic Number: {chromaticNumber < 0 ? "Unknown" : chromaticNumber }</div>
-					<div id = "chromatic-actions">
-						<button on:click = {CalculateChromaticNumber}>Recalculate</button>
-						<button on:click = {ToggleColoring}>{preColor === null ? "Color" : "Reset Color"}</button>
-					</div>
-				</div>
-				<div id = "pathfinding">
-					<div>Shortest Path from <input type = "text" size = {5} bind:this = {pathFrom}/> to <input type = "text" size = {5} bind:this = {pathTo}/></div>
-					<div>
-						<button on:click = {FindPath}>Find Path</button>
-					</div>
-				</div>
+				<Mathematics {display} bind:this = {mathematics} />
 			</Foldup>
 			<Foldup title = "Simulation" on:toggle = {FoldupToggled} open = {foldups[2]} index = {2}>
-				WIP
+				<Simulation {display} bind:this = {simulation} />
 			</Foldup>
 			<Foldup title = "Snapshots" on:toggle = {FoldupToggled} open = {foldups[3]} index = {3}>
 				<div id = "adder">
@@ -399,34 +175,6 @@
 		align-items: flex-start;
 	}
 
-	#importer-flex
-	{
-		display: flex;
-		flex-direction: column;
-		width: 100%;
-		align-items: center;
-	}
-
-	#importer-flex textarea
-	{
-		width: 100%;
-	}
-
-	#importer-flex h4
-	{
-		width: 100%;
-		text-align: left;
-		margin: 0 0 12px 0;
-	}
-
-	#importer-flex #controls
-	{
-		display: flex;
-		justify-content: center;
-		align-items: center;
-		gap: 8px;
-	}
-
 	#recolor
 	{
 		display: flex;
@@ -450,6 +198,17 @@
 		position: absolute;
 		bottom: 30px;
 		gap: 12px;
+	}
+
+	#delete-button
+	{
+		display: flex;
+		gap: 8px;
+	}
+
+	#delete-icon
+	{
+		width: 20px;
 	}
 
     #color-picker

@@ -13,7 +13,6 @@
 
     export let selectedVert : GraphVertex = null;
     export let canDraw : boolean = true;
-    export let simulating : boolean = false;
     
     let graphVertices : GraphVertex[] = [];
     let graphEdges : GraphEdge[] = [];
@@ -53,6 +52,11 @@
 
         return id;
     }
+
+    export function SetDrawable(drawable : boolean)
+    {
+        canDraw = drawable;
+    }
     
     function DrawCanvas()
     {
@@ -62,7 +66,7 @@
         const markedColor = new Color("#8cc63f");
 
         graphEdges.forEach((edge) => {
-            if(edge.box.Intersects(viewBox))
+            if(true)
             {
                 let screenPosA = $viewport.UnitToPixel(edge.a.pos);
                 let screenPosB = $viewport.UnitToPixel(edge.b.pos);
@@ -71,7 +75,7 @@
         });
 
         graphVertices.forEach((vert) => {
-            if(vert.box.Intersects(viewBox))
+            if(true)
             {
                 let screenPos = $viewport.UnitToPixel(vert.pos);
                 let screenRadius = vert.radius / $viewport.scale;
@@ -233,6 +237,13 @@
         DrawCanvas();
     }
 
+    export function SetPositions(positions : Point[])
+    {
+        positions.forEach((v, i) => {if(graphVertices[i] !== undefined) graphVertices[i].pos = v});
+
+        DrawCanvas();
+    }
+
     export function Get() : {verts: GraphVertex[], edges: GraphEdge[]}
     {
         return {verts: graphVertices, edges: graphEdges};
@@ -266,20 +277,21 @@
         selectedVert = null;
     }
 
-    export function Clear()
+    export function Clear(sendCleared : boolean = true)
     {
         Deselect();
         graphVertices = [];
         graphEdges = [];
         drawBuffer = [];
         dispatch("changed");
+        if(sendCleared) dispatch("cleared");
 
         DrawCanvas();
     }
 
     export function Load(snap : Snapshot)
     {
-        Clear();
+        Clear(false);
 
         graphVertices = snap.verts.map(({id, pos, radius, color}) => new GraphVertex({id, pos, radius, color: Color.FromRGBA(color.r, color.g, color.b, 1.0)}));
         graphEdges = snap.edges.map(({a, b}) => new GraphEdge(graphVertices[a], graphVertices[b]));

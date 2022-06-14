@@ -47,18 +47,8 @@
     button
     {
         padding: 4px 8px;
-		border-radius: 6px;
-		border: none;
 		align-self: center;
 
 		font-size: medium;
-
-		display: flex;
-		flex-direction: row;
-		gap: 8px;
-		justify-content: center;
-		align-items: center;
-		cursor: pointer;
-		transition-duration: 0.1s;
     }
 </style>

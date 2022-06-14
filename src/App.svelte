@@ -18,7 +18,7 @@
 <Sidebar bind:this = {sidebar} {gridCanvas} {display} {selected} on:help = {() => helpModalOpen = !helpModalOpen} />
 <main>
 	<GridCanvas bind:this = {gridCanvas} />
-	<DisplayCanvas bind:this = {display} bind:selectedVert = {selected} on:changed = {sidebar.InvalidateColoring} />
+	<DisplayCanvas bind:this = {display} bind:selectedVert = {selected} on:changed = {() => sidebar.InvalidateColoring(false)} on:cleared = {() => sidebar.InvalidateColoring(true)} />
 </main>
 
 <style>

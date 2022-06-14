@@ -28,6 +28,11 @@ export class Point
         return new Point({x: a.x * b, y: a.y * b});
     }
 
+    static Normalise(a : Point) : Point
+    {
+        return Point.Scale(a, 1/Point.Distance(Point.Zero, a));
+    }
+
     static OnUnitCircle(deg : number) : Point
     {
         let rad = deg * (Math.PI / 180)
