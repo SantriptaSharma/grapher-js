@@ -13,6 +13,7 @@
 
     export let selectedVert : GraphVertex = null;
     export let canDraw : boolean = true;
+    export let simulating : boolean = false;
     
     let graphVertices : GraphVertex[] = [];
     let graphEdges : GraphEdge[] = [];

@@ -9,6 +9,7 @@
     import { Color } from "../library/color";
 	import { Point } from '../library/point';
 	import { ClampValue, ImportPlacer } from '../library/helpers';
+	import { Dijkstra } from "../library/dijkstra";
     
     import FaTrash from 'svelte-icons/fa/FaTrash.svelte';
 	import { snapshots, type Snapshot } from '../stores/snapshot';
@@ -257,7 +258,7 @@
 		}
 
 		const isAlphabet = (c) => (c.charCodeAt(0) >= 'a'.charCodeAt(0) && c.charCodeAt(0) <= 'z'.charCodeAt(0)) || (c.charCodeAt(0) >= 'A'.charCodeAt(0) && c.charCodeAt(0) <= 'Z'.charCodeAt(0));
-		console.log(Array.from(from));
+
 		if(!(Array.from(from).every(isAlphabet)))
 		{
 			alert("Invalid from argument, includes non-alphabetic characters");
@@ -292,70 +293,16 @@
 		}
 
 		graph.edges.forEach((v) => v.marked = false);
-		const distance_between = (a : number, b : number) => Point.Distance(graph.verts[a].pos, graph.verts[b].pos);
-		const edge_connecting = (a : number, b : number) => graph.edges.findIndex((v, i) => (v.a === graph.verts[a] && v.b === graph.verts[b]) || (v.a === graph.verts[b] && v.b === graph.verts[a]))
-		const get_neighbours = (a : number) => {const neighbourList = []; matrix[a].forEach((v, i) => {if(v) neighbourList.push(i)}); return neighbourList;};
 
-		const heap = new FibonacciHeap<number, number>();
-		const distances : Array<number> = Array.from(new Array(vert_count), (_) => Infinity);
-		const previousInPath : Array<number> = Array.from(new Array(vert_count), (_) => undefined);
-		const heapNodes : Array<any> = Array.from(new Array(vert_count), undefined);
-		const vertsConsidered = [];
+		const result = Dijkstra({ ...graph, matrix }, fromId, toId);
 
-		distances[fromId] = 0;
-
-		distances.forEach((v, i) => {
-			heapNodes[i] = heap.insert(v, i);
-		});
-
-		while(!heap.isEmpty())
+		if(result.success)
 		{
-			const u = heap.extractMinimum();
-
-			vertsConsidered.push(u.value);
-
-			get_neighbours(u.value).forEach((vert) => {
-				if(vertsConsidered.findIndex((v) => vert === v) !== -1)
-				{
-					return;
-				}
-
-				const alt_dist_through_u = distances[u.value] + distance_between(u.value, vert);
-
-				if(alt_dist_through_u < distances[vert])
-				{
-					distances[vert] = alt_dist_through_u;
-					previousInPath[vert] = u.value;
-					heap.decreaseKey(heapNodes[vert], alt_dist_through_u);
-				}
-			});
-
-			if(u.value === toId)
-			{
-				break;
-			}
+			result.edges.forEach((v) => {
+				graph.edges[v].marked = true;
+			})
+			display.Set(graph.verts, graph.edges);
 		}
-
-		previousInPath[fromId] = undefined;
-
-		if(previousInPath[toId] === undefined)
-		{
-			alert("No Path Found");
-			return;
-		}
-
-		let cur = toId;
-		while(cur !== fromId)
-		{
-			const previous = previousInPath[cur];
-			if(previous === undefined) break;
-			const edgeToMark = edge_connecting(cur, previous);
-			if(edgeToMark === -1) break;
-			graph.edges[edgeToMark].marked = true;
-			cur = previous;
-		}
-
-		display.Set(graph.verts, graph.edges);
 	}
 
     $: if(selected !== null)
