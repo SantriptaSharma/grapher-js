@@ -126,6 +126,7 @@
         let viewBox = $viewport.ToBox();
         let visibleVertices = graphVertices.filter(val => val.box.Intersects(viewBox));
 
+        if(drawBuffer.length === 0) return;
         let startPointInUnits = $viewport.PixelToUnit(drawBuffer[0]);
         let start = null;
         let endPointInUnits = $viewport.PixelToUnit(drawBuffer[drawBuffer.length - 1]);

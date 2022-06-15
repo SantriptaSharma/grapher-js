@@ -8,6 +8,7 @@ export default class SimulationContext
     springConstant : number;
     gravity : number;
     stepsPerSecond : number;
+    frozen : number[];
 
     particles : Particle[];
     springs : Spring[];
@@ -15,12 +16,13 @@ export default class SimulationContext
     onStep : (positions : Point[]) => void = undefined;
     toStop : boolean = false;
 
-    constructor(density : number, springConstant : number, gravity : number, rate : number)
+    constructor(density : number, springConstant : number, gravity : number, rate : number, frozen : number[])
     {
         this.radiusDensity = density;
         this.springConstant = springConstant;
         this.gravity = gravity;
         this.stepsPerSecond = rate;
+        this.frozen = frozen;
 
         this.particles = [];
         this.springs = [];
@@ -35,7 +37,7 @@ export default class SimulationContext
         }
 
         ref.springs.forEach((v) => v.Step());
-        ref.particles.forEach((v) => v.Step());
+        ref.particles.forEach((v, i) => {if(ref.frozen.findIndex((f) => f === i) === -1) v.Step()});
 
         if(ref.onStep !== undefined) ref.onStep(ref.particles.map((p) => p.pos));
         

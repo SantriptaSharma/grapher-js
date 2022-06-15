@@ -96,8 +96,8 @@
 
 	export function InvalidateColoring(cleared : boolean)
 	{
-		if(foldups[1] && mathematics !== undefined) mathematics.InvalidateColoring();
-		if(foldups[2] && simulation !== undefined && cleared) simulation.InvalidateOnClear();
+		if(foldups[1] && mathematics !== undefined && mathematics !== null) mathematics.InvalidateColoring();
+		if(foldups[2] && simulation !== undefined && simulation !== null && cleared) simulation.InvalidateOnClear();
 	}
 
     $: if(selected !== null)
